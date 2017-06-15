@@ -1,5 +1,6 @@
 import datetime
 import logging
+import random
 
 from simple_settings import settings
 
@@ -25,15 +26,48 @@ def get_days_left_in_summer(tz=None):
     else:
         return 0
 
+RESPONSES = '''\
+It is certain
+It is decidedly so
+Without a doubt
+Yes definitely
+You may rely on it
+As I see it, yes
+Most likely
+Outlook good
+Yes
+Signs point to yes
+Reply hazy try again
+Ask again later
+Better not tell you now
+Cannot predict now
+Concentrate and ask again
+Don't count on it
+My reply is no
+My sources say no
+Outlook not so good
+Very doubtful
+'''.split('\n')
+
 
 def start(bot, update):
     bot.send_message(
         chat_id=update.message.chat_id,
         text=(
             'Yo yo yo!!! I am summer bot and I know how summer days left.'
-            '/summer_days - I will write to the chat how many days left'
+            '/summerdays - I will write to the chat how many days left'
+            '/magicball - Ask me something'
             )
         )
+
+
+def magic_8_ball(bot, update):
+    answer = random.choice(RESPONSES)
+    bot.send_message(
+            chat_id=update.message.chat_id,
+            reply_to_message_id=update.message.message_id,
+            text=answer
+            )
 
 
 def days_left(bot, update):
@@ -73,9 +107,11 @@ def main():
     start_handler = CommandHandler('start', start)
     dispatcher.add_handler(start_handler)
 
-    days_handler = CommandHandler('summer_days', days_left)
+    days_handler = CommandHandler('summerdays', days_left)
     dispatcher.add_handler(days_handler)
 
+    magic_ball_handler = CommandHandler('magicball', magic_8_ball)
+    dispatcher.add_handler(magic_ball_handler)
 
     updater.start_polling()
 
