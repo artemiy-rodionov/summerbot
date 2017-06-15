@@ -14,4 +14,8 @@ def test_summer_left(monkeypatch):
     with freeze_time('2017-08-31 12:00'):
         assert bot.get_days_left_in_summer() == 1
     with freeze_time('2017-09-01 12:00'):
-        assert bot.get_days_left_in_summer() == 365
+        assert bot.get_days_left_in_summer() == 0
+    with freeze_time('2017-03-01 12:00'):
+        assert bot.get_days_left_in_summer() == 0
+    with freeze_time('2017-06-01 12:00'):
+        assert bot.get_days_left_in_summer() == 92

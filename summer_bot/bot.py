@@ -18,9 +18,12 @@ def get_days_left_in_summer(tz=None):
         tz = settings.DEFAULT_TIMEZONE
     tznow = utcnow.astimezone(pytz.timezone(tz))
     tznow_date = tznow.date()
+    first_day = datetime.date(tznow_date.year, 6, 1)
     last_day = datetime.date(tznow_date.year, 9, 1)
-    days_left = (last_day - tznow_date).days
-    return days_left
+    if first_day <= tznow_date <= last_day:
+        return (last_day - tznow_date).days
+    else:
+        return 0
 
 
 def start(bot, update):
