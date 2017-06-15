@@ -1,3 +1,4 @@
 API_KEY = None
 
 DEFAULT_TIMEZONE = 'Europe/Moscow'
+SVOBODA_CHAT_ID = None

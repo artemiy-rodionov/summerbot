@@ -5,7 +5,7 @@ from textwrap import dedent
 
 from simple_settings import settings
 
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import Updater, CommandHandler, Job
 import pytz
 import emoji
 
@@ -13,13 +13,20 @@ import logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
+DEFAULT_TZ = pytz.timezone(settings.DEFAULT_TIMEZONE)
 
-def get_days_left_in_summer(tz=None):
+
+def tznow(tz=None):
     utcnow = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
     if tz is None:
-        tz = settings.DEFAULT_TIMEZONE
-    tznow = utcnow.astimezone(pytz.timezone(tz))
-    tznow_date = tznow.date()
+        tz = DEFAULT_TZ
+    else:
+        tz = pytz.timezone(tz)
+    return utcnow.astimezone(tz)
+
+
+def get_days_left_in_summer(tz=None):
+    tznow_date = tznow().date()
     first_day = datetime.date(tznow_date.year, 6, 1)
     last_day = datetime.date(tznow_date.year, 9, 1)
     if first_day <= tznow_date <= last_day:
@@ -102,9 +109,20 @@ def days_left(bot, update):
         )
 
 
+def callback_1900(bot, job):
+    bot.send_message(
+            chat_id=settings.SVOBODA_CHAT_ID,
+            text='Го в Свобода'
+            )
+    next_run = 24 * 60 * 60
+    logging.info("next run in {} seconds".format(next_run))
+    job.interval = next_run
+
+
 def main():
     updater = Updater(token=settings.API_KEY)
     dispatcher = updater.dispatcher
+    jq = updater.job_queue
 
     start_handler = CommandHandler('start', start)
     dispatcher.add_handler(start_handler)
@@ -114,6 +132,19 @@ def main():
 
     magic_ball_handler = CommandHandler('magicball', magic_8_ball)
     dispatcher.add_handler(magic_ball_handler)
+
+    if settings.SVOBODA_CHAT_ID:
+        moscow_now = tznow()
+        cb_time = datetime.time(1, 35)
+        if moscow_now.time() > cb_time:
+            day = moscow_now.date() + datetime.timedelta(days=1)
+        else:
+            day = moscow_now.date()
+        cb_dtime = DEFAULT_TZ.localize(datetime.datetime.combine(day, cb_time))
+        delta = cb_dtime - moscow_now
+        logging.info('Cb dtime {} now is {}'.format(cb_dtime, moscow_now))
+        logging.info('Set job after {} seconds'.format(delta.total_seconds()))
+        jq.put(Job(callback_1900, delta.total_seconds()))
 
     updater.start_polling()
 
