@@ -1,6 +1,7 @@
 import datetime
 import logging
 import random
+from textwrap import dedent
 
 from simple_settings import settings
 
@@ -53,10 +54,11 @@ Very doubtful
 def start(bot, update):
     bot.send_message(
         chat_id=update.message.chat_id,
-        text=(
-            'Yo yo yo!!! I am summer bot and I know how summer days left.'
-            '/summerdays - I will write to the chat how many days left'
-            '/magicball - Ask me something'
+        text=dedent("""\
+                Yo yo yo!!! I am summer bot and I can:
+                /summerdays - I will write to the chat how many days left
+                /magicball - Ask me something
+                """
             )
         )
 
