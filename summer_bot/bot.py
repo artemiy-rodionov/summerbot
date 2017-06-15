@@ -61,8 +61,7 @@ def days_left(bot, update):
     bot.send_message(
         chat_id=update.message.chat_id,
         text=(
-                '#ровноцелых{} 🌞'.format(days_text),
-                use_aliases=True
+            '#ровноцелых{} 🌞'.format(days_text)
             )
         )
 
