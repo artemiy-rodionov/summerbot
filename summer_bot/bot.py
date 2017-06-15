@@ -5,7 +5,7 @@ from simple_settings import settings
 
 from telegram.ext import Updater, CommandHandler
 import pytz
-
+import emoji
 
 import logging
 logging.basicConfig(level=logging.DEBUG,
@@ -61,7 +61,10 @@ def days_left(bot, update):
     bot.send_message(
         chat_id=update.message.chat_id,
         text=(
-            '#ровноцелых{}'.format(days_text)
+            emoji.emojize(
+                '#ровноцелых{} :sunny:'.format(days_text),
+                use_aliases=True
+                )
             )
         )
 

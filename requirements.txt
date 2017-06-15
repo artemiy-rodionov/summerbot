@@ -4,3 +4,4 @@ pytz
 pytest
 pytest-mock
 freezegun
+emoji

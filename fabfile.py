@@ -14,5 +14,6 @@ def deploy():
     with cd(folder):
         put('/tmp/latest.zip', folder)
         run('unzip latest.zip')
+        run('./venv3/bin/pip install -r requirements.txt')
     sudo('supervisorctl restart summer_bot')
     local('rm /tmp/latest.zip')
