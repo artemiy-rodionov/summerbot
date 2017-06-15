@@ -68,7 +68,7 @@ def magic_8_ball(bot, update):
     bot.send_message(
             chat_id=update.message.chat_id,
             reply_to_message_id=update.message.message_id,
-            text=answer
+            text='🎱 {}'.format(answer)
             )
 
 
