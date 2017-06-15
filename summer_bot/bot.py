@@ -135,7 +135,7 @@ def main():
 
     if settings.SVOBODA_CHAT_ID:
         moscow_now = tznow()
-        cb_time = datetime.time(1, 35)
+        cb_time = datetime.time(19, 0)
         if moscow_now.time() > cb_time:
             day = moscow_now.date() + datetime.timedelta(days=1)
         else:
