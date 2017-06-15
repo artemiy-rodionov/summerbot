@@ -1,0 +1,17 @@
+import os
+
+import datetime
+from freezegun import freeze_time
+
+from summer_bot import bot
+
+os.environ['SIMPLE_SETTINGS'] = 'summer_bot.config'
+
+
+def test_summer_left(monkeypatch):
+    with freeze_time('2017-06-03 12:00'):
+        assert bot.get_days_left_in_summer() == 90
+    with freeze_time('2017-08-31 12:00'):
+        assert bot.get_days_left_in_summer() == 1
+    with freeze_time('2017-09-01 12:00'):
+        assert bot.get_days_left_in_summer() == 365

@@ -1,1 +1,6 @@
 python-telegram-bot
+simple-settings
+pytz
+pytest
+pytest-mock
+freezegun
