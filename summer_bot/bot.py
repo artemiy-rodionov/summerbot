@@ -34,7 +34,7 @@ def get_days_left_in_summer(tz=None):
     else:
         return 0
 
-RESPONSES = '''\
+RESPONSES_EN = '''\
 It is certain
 It is decidedly so
 Without a doubt
@@ -54,8 +54,57 @@ Don't count on it
 My reply is no
 My sources say no
 Outlook not so good
-Very doubtful
+Very doubtful\
 '''.split('\n')
+
+RESPONSES_ES = '''\
+En mi opinión, sí
+Es cierto
+Es decididamente así
+Probablemente
+Buen pronóstico
+Todo apunta a que sí
+Sin duda
+Sí
+Sí - definitivamente
+Debes confiar en ello
+Respuesta vaga, vuelve a intentarlo
+Pregunta en otro momento
+Será mejor que no te lo diga ahora
+No puedo predecirlo ahora
+Concéntrate y vuelve a preguntar
+No cuentes con ello
+Mi respuesta es no
+Mis fuentes me dicen que no
+Las perspectivas no son buenas
+Muy dudoso\
+'''.split('\n')
+RESPONSES_DE = '''\
+'''.split('\n')
+
+RESPONSES_RU = '''\
+Бесспорно
+Предрешено
+Никаких сомнений
+Определённо да
+Можешь быть уверен в этом
+Мне кажется — «да»
+Вероятнее всего
+Хорошие перспективы
+Знаки говорят — «да»
+Да
+Пока не ясно, попробуй снова
+Спроси позже
+Лучше не рассказывать
+Сейчас нельзя предсказать
+Сконцентрируйся и спроси опять
+Даже не думай
+Мой ответ — «нет»
+По моим данным — «нет»
+Перспективы не очень хорошие
+Весьма сомнительно\
+'''.split('\n')
+RESPONSES_MAX='иди на хуй'.split('\n')
 
 
 def start(bot, update):
@@ -64,19 +113,25 @@ def start(bot, update):
         text=dedent("""\
                 Yo yo yo!!! I am summer bot and I can:
                 /summerdays - I will write to the chat how many days left
-                /magicball - Ask me something
+                /magicball - спроси меня
+                /magicballen - ask me
+                /magicballmax - спроси Макса
+                /magicballes - pregunta a mí
+                /magicballru - спроси меня
                 """
             )
         )
 
 
-def magic_8_ball(bot, update):
-    answer = random.choice(RESPONSES)
-    bot.send_message(
-            chat_id=update.message.chat_id,
-            reply_to_message_id=update.message.message_id,
-            text='🎱 {}'.format(answer)
-            )
+def magic_8_ball(responses):
+    def f(bot, update):
+        answer = random.choice(responses)
+        bot.send_message(
+                chat_id=update.message.chat_id,
+                reply_to_message_id=update.message.message_id,
+                text='🎱 {}'.format(answer)
+                )
+    return f
 
 
 def days_left(bot, update):
@@ -130,8 +185,20 @@ def main():
     days_handler = CommandHandler('summerdays', days_left)
     dispatcher.add_handler(days_handler)
 
-    magic_ball_handler = CommandHandler('magicball', magic_8_ball)
-    dispatcher.add_handler(magic_ball_handler)
+    for postfix, responses in (
+            ('en', RESPONSES_EN),
+            ('es', RESPONSES_ES),
+            ('ru', RESPONSES_RU),
+            ('max', RESPONSES_MAX)
+            ):
+        dispatcher.add_handler(CommandHandler(
+                'magicball{}'.format(postfix),
+                magic_8_ball(responses)
+                ))
+    dispatcher.add_handler(CommandHandler(
+            'magicball',
+            magic_8_ball(RESPONSES_RU)
+            ))
 
     if settings.SVOBODA_CHAT_ID:
         moscow_now = tznow()
