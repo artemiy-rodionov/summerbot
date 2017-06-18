@@ -8,30 +8,13 @@ from simple_settings import settings
 from telegram.ext import Updater, CommandHandler, Job
 import pytz
 
-import logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
 
 DEFAULT_TZ = pytz.timezone(settings.DEFAULT_TIMEZONE)
 
-
-def tznow(tz=None):
-    utcnow = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-    if tz is None:
-        tz = DEFAULT_TZ
-    else:
-        tz = pytz.timezone(tz)
-    return utcnow.astimezone(tz)
-
-
-def get_days_left_in_summer(tz=None):
-    tznow_date = tznow().date()
-    first_day = datetime.date(tznow_date.year, 6, 1)
-    last_day = datetime.date(tznow_date.year, 9, 1)
-    if first_day <= tznow_date <= last_day:
-        return (last_day - tznow_date).days
-    else:
-        return 0
 
 RESPONSES_EN = '''\
 It is certain
@@ -103,23 +86,44 @@ RESPONSES_RU = '''\
 Перспективы не очень хорошие
 Весьма сомнительно\
 '''.split('\n')
-RESPONSES_MAX='иди на хуй'.split('\n')
+
+RESPONSES_MAX = 'иди на хуй'.split('\n')
+
+
+def tznow(tz=None):
+    utcnow = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+    if tz is None:
+        tz = DEFAULT_TZ
+    else:
+        tz = pytz.timezone(tz)
+    return utcnow.astimezone(tz)
+
+
+def get_days_left_in_summer(tz=None):
+    tznow_date = tznow().date()
+    first_day = datetime.date(tznow_date.year, 6, 1)
+    last_day = datetime.date(tznow_date.year, 9, 1)
+    if first_day <= tznow_date <= last_day:
+        return (last_day - tznow_date).days
+    else:
+        return 0
 
 
 def start(bot, update):
     bot.send_message(
         chat_id=update.message.chat_id,
-        text=dedent("""\
-                Yo yo yo!!! I am summer bot and I can:
-                /summerdays - I will write to the chat how many days left
-                /magicball - спроси меня
-                /magicballen - ask me
-                /magicballmax - спроси Макса
-                /magicballes - pregunta a mí
-                /magicballru - спроси меня
-                """
-            )
+        text=dedent(
+            """\
+            Yo yo yo!!! I am summer bot and I can:
+            /summerdays - I will write to the chat how many days left
+            /magicball - спроси меня
+            /magicballen - ask me
+            /magicballmax - спроси Макса
+            /magicballes - pregunta a mí
+            /magicballru - спроси меня
+            """
         )
+    )
 
 
 def magic_8_ball(responses):
