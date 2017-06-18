@@ -1,11 +1,11 @@
 import os
 
-import datetime
+os.environ['SIMPLE_SETTINGS'] = 'summer_bot.config'
+
 from freezegun import freeze_time
 
 from summer_bot import bot
 
-os.environ['SIMPLE_SETTINGS'] = 'summer_bot.config'
 
 
 def test_summer_left(monkeypatch):

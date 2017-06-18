@@ -1,6 +1,8 @@
 Telegram Summer bot
 ==================
 
+[![Build Status](https://travis-ci.org/artemiy-rodionov/summerbot.svg?branch=master)](https://travis-ci.org/artemiy-rodionov/summerbot)
+
 Deps:
 - python3
 - install dependencies `pip install -r requirements.txt`
