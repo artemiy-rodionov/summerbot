@@ -7,7 +7,6 @@ from simple_settings import settings
 
 from telegram.ext import Updater, CommandHandler, Job
 import pytz
-import emoji
 
 import logging
 logging.basicConfig(level=logging.DEBUG,

@@ -1,7 +1,8 @@
 python-telegram-bot
 simple-settings
 pytz
+
+# test reqs
 pytest
 pytest-mock
 freezegun
-emoji
