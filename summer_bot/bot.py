@@ -4,8 +4,6 @@ import logging
 import random
 from textwrap import dedent
 import sqlite3
-import queue
-
 
 from simple_settings import settings
 import requests
@@ -301,6 +299,11 @@ def instagram_success():
     return user_text, 200
 
 
+def gen_url_for(*args, **kwargs):
+    with app.app_context():
+        return url_for(*args, **kwargs)
+
+
 def run_http():
     app.config.update(settings.as_dict())
     app.debug = False
@@ -326,6 +329,7 @@ def start(bot, update):
             /magicballmax - спроси Макса
             /magicballes - pregunta a mí
             /magicballru - спроси меня
+            /instagram - постить свои фоточки из инстаграма
             """
         )
     )
@@ -385,6 +389,15 @@ def days_left(bot, update):
             )
         )
 
+def instagram_bot(bot, update):
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        text='<a href="{url}">URL</a>'.format(
+            url=gen_url_for('instagram_connect', _external=True)
+        ),
+        parse_mode=telegram.ParseMode.HTML
+        )
+
 
 def post_image_url(bot, job):
     bot.send_photo(
@@ -440,9 +453,17 @@ def main():
             'magicball',
             magic_8_ball(RESPONSES_RU)
             ))
+<<<<<<< HEAD
     dispatcher.add_handler(
         MessageHandler(Filters.text & SlabakFilter(), slabak_message)
     )
+||||||| merged common ancestors
+=======
+    dispatcher.add_handler(CommandHandler(
+        'instagram',
+        instagram_bot
+        ))
+>>>>>>> Add instagram handler
 
     if settings.SVOBODA_CHAT_ID:
         moscow_now = tznow()
