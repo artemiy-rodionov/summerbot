@@ -5,7 +5,10 @@ from textwrap import dedent
 
 from simple_settings import settings
 
-from telegram.ext import Updater, CommandHandler, Job
+from telegram.ext import (
+    Updater, CommandHandler, Job, MessageHandler, BaseFilter, Filters
+)
+
 import pytz
 
 logging.basicConfig(
@@ -89,6 +92,12 @@ RESPONSES_RU = '''\
 
 RESPONSES_MAX = 'иди на хуй'.split('\n')
 
+SLABAK_TEXT = '''
+пас
+я пас\
+'''.split('\n')
+SLABAK_STICKER_ID = 'CAADAgADGQADILtyA8fJUtBfJbTsAg'
+
 
 def tznow(tz=None):
     utcnow = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
@@ -135,6 +144,20 @@ def magic_8_ball(responses):
                 text='🎱 {}'.format(answer)
                 )
     return f
+
+
+class SlabakFilter(BaseFilter):
+    def filter(self, message):
+        txt = message.text.strip().lower()
+        return txt in SLABAK_TEXT
+
+
+def slabak_message(bot, update):
+    bot.send_sticker(
+        chat_id=update.message.chat_id,
+        reply_to_message_id=update.message.message_id,
+        sticker=SLABAK_STICKER_ID
+    )
 
 
 def days_left(bot, update):
@@ -202,6 +225,9 @@ def main():
             'magicball',
             magic_8_ball(RESPONSES_RU)
             ))
+    dispatcher.add_handler(
+        MessageHandler(Filters.text & SlabakFilter(), slabak_message)
+    )
 
     if settings.SVOBODA_CHAT_ID:
         moscow_now = tznow()
