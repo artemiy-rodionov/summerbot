@@ -2,7 +2,7 @@ from fabric.api import *
 
 
 env.use_ssh_config = True
-env.hosts = ["snalg1"]
+env.hosts = ["nalg"]
 
 
 folder = '/home/snoopt/summer'
