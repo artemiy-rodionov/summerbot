@@ -1,5 +1,6 @@
 python-telegram-bot
 simple-settings
+requests
 pytz
 
 # test reqs
@@ -10,3 +11,6 @@ freezegun
 pycodestyle
 pyflakes
 flake8
+
+flask
+python-instagram-ext
