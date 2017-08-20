@@ -10,6 +10,7 @@ import requests
 
 from flask import Flask, redirect, url_for, request
 
+import telegram
 from telegram.ext import (
     Updater, CommandHandler, Job, MessageHandler, BaseFilter, Filters
 )
@@ -217,7 +218,10 @@ def post_last_photo(name):
     conn = conn_db()
     with conn:
         cur = conn.cursor()
-        cur.execute('SELECT access_token, instagram_id FROM insta_users WHERE name=?', (name,))
+        cur.execute(
+            'SELECT access_token, instagram_id FROM insta_users WHERE name=?',
+            (name, )
+        )
         data = cur.fetchone()
         if not data:
             return
@@ -234,6 +238,7 @@ def post_last_photo(name):
 # http server
 
 app = Flask(__name__)
+
 
 @app.route('/')
 def yo():
@@ -389,6 +394,7 @@ def days_left(bot, update):
             )
         )
 
+
 def instagram_bot(bot, update):
     bot.send_message(
         chat_id=update.message.chat_id,
@@ -453,17 +459,13 @@ def main():
             'magicball',
             magic_8_ball(RESPONSES_RU)
             ))
-<<<<<<< HEAD
     dispatcher.add_handler(
         MessageHandler(Filters.text & SlabakFilter(), slabak_message)
     )
-||||||| merged common ancestors
-=======
     dispatcher.add_handler(CommandHandler(
         'instagram',
         instagram_bot
         ))
->>>>>>> Add instagram handler
 
     if settings.SVOBODA_CHAT_ID:
         moscow_now = tznow()
