@@ -18,6 +18,8 @@ from telegram.ext import (
 from instagram.client import InstagramAPI
 import pytz
 
+from . import utils
+
 logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -155,6 +157,8 @@ def create_db_tables():
                 name TEXT,
                 access_token TEXT,
                 instagram_id TEXT,
+                telegram_id TEXT,
+                is_active BOOLEAN,
                 created INT
                 );
                 '''
@@ -173,7 +177,7 @@ def create_db_tables():
         )
 
 
-def register_user(token, user_data):
+def register_user(token, user_data, telegram_id):
     logger.info('Registering user')
     conn = conn_db()
     name = user_data['username']
@@ -183,8 +187,9 @@ def register_user(token, user_data):
         data = cur.fetchone()
         if data is None:
             logger.info('Add new user {}'.format(name))
-            cur.execute('INSERT INTO insta_users values (?,?,?,?,?)', (
-                None, name, token, user_data['id'], ts_utcnow()
+            cur.execute('INSERT INTO insta_users values (?,?,?,?,?,?,?)', (
+                None, name, token, user_data['id'],
+                telegram_id, True, ts_utcnow()
             ))
             is_new = True
         else:
@@ -245,10 +250,18 @@ def yo():
     return 'yo'
 
 
+@app.route('/instagram_disconnect/')
+def instagram_disconnect():
+    return 'ok'
+
+
 @app.route('/instagram_connect/')
 def instagram_connect():
+    telegram_id = request.args.get('telegram_id')
     api = get_insta_client()
-    return redirect(api.get_authorize_login_url())
+    url = api.get_authorize_login_url()
+    url = '{}&telegram_id={}'.format(url, telegram_id)
+    return redirect(url)
 
 
 @app.route('/instagram_hook/', methods=['GET', 'POST'])
@@ -265,6 +278,7 @@ def instagram_hook():
 def instagram_success():
     code = request.args.get('code')
     error = request.args.get('error')
+    telegram_id = request.args.get('telegram_id')
     if error:
         return ':( {}'.format(request.args.get('error_decription')), 200
     if code:
@@ -284,7 +298,7 @@ def instagram_success():
         data = resp.json()
         user = data['user']
     logger.info(data)
-    is_new = register_user(data['access_token'], user)
+    is_new = register_user(data['access_token'], user, telegram_id)
     if True or is_new:
         post_last_photo(user['username'])
         api.create_subscription(
@@ -396,12 +410,23 @@ def days_left(bot, update):
 
 
 def instagram_bot(bot, update):
+    connect_url = gen_url_for('instagram_connect',
+                              telegram_id=update.message.from_user.id,
+                              _external=True)
+    disconnect_url = gen_url_for('instagram_disconnect', _external=True)
+    logger.info(connect_url)
+    button_list = [
+        telegram.InlineKeyboardButton('Connect account', url=connect_url),
+        telegram.InlineKeyboardButton('Disconnect account', url=disconnect_url),
+        # telegram.InlineKeyboardButton('Post last message'),
+    ]
+    keyboard = telegram.InlineKeyboardMarkup([button_list])
     bot.send_message(
+        text='Instagram menu',
         chat_id=update.message.chat_id,
-        text='<a href="{url}">URL</a>'.format(
-            url=gen_url_for('instagram_connect', _external=True)
-        ),
-        parse_mode=telegram.ParseMode.HTML
+        reply_to_message_id=update.message.message_id,
+        reply_markup=keyboard,
+        disable_web_page_preview=True
         )
 
 
