@@ -230,7 +230,7 @@ def _mention_users(text, users):
 
 def here_message(bot, update):
     text = update.message.text.replace(HERE_CMD, '')
-    chat_users = CHAT_USER_REGISTRY.get_active_users(update.message.chat, 1)
+    chat_users = CHAT_USER_REGISTRY.get_active_users(update.message.chat)
     text = _mention_users(text, chat_users)
     logging.info('here text: {}'.format(text))
 
