@@ -194,13 +194,13 @@ class SlabakFilter(BaseFilter):
 
 class ChannelFilter(BaseFilter):
     def filter(self, message):
-        txt = message.text.strip().lower()
+        txt = message.text.strip().lower().split()
         return CHANNEL_CMD in txt
 
 
 class HereFilter(BaseFilter):
     def filter(self, message):
-        txt = message.text.strip().lower()
+        txt = message.text.strip().lower().split()
         return HERE_CMD in txt
 
 
@@ -230,7 +230,7 @@ def _mention_users(text, users):
 
 def here_message(bot, update):
     text = update.message.text.replace(HERE_CMD, '')
-    chat_users = CHAT_USER_REGISTRY.get_active_users(update.message.chat)
+    chat_users = CHAT_USER_REGISTRY.get_active_users(update.message.chat, 1)
     text = _mention_users(text, chat_users)
     logging.info('here text: {}'.format(text))
 
