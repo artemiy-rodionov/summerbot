@@ -194,13 +194,13 @@ class SlabakFilter(BaseFilter):
 
 class ChannelFilter(BaseFilter):
     def filter(self, message):
-        txt = message.text.strip().lower().split()
+        txt = message.text.lower().split()
         return CHANNEL_CMD in txt
 
 
 class HereFilter(BaseFilter):
     def filter(self, message):
-        txt = message.text.strip().lower().split()
+        txt = message.text.lower().split()
         return HERE_CMD in txt
 
 
