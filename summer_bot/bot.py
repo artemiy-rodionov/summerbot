@@ -5,6 +5,7 @@ from textwrap import dedent
 
 from simple_settings import settings
 
+import telegram
 from telegram.ext import (
     Updater, CommandHandler, Job, MessageHandler, BaseFilter, Filters
 )
@@ -17,6 +18,43 @@ logging.basicConfig(
         )
 
 DEFAULT_TZ = pytz.timezone(settings.DEFAULT_TIMEZONE)
+
+
+class ChatUserRegistry:
+    def __init__(self):
+        self._registry = {}
+
+    def add_user(self, user, chat):
+        if user.is_bot:
+            return
+        chat_id = chat.id
+        if chat_id not in self._registry:
+            logging.info('Create new user chat registry {} {}'.format(chat_id, chat.title))
+            self._registry[chat_id] = {}
+
+        user_id = user.id
+        if user_id not in self._registry[chat_id]:
+            logging.info('Add new user to chat registry {} {}'.format(chat, user))
+            self._registry[chat_id][user_id] = {
+                'user_id': user_id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name
+            }
+        self._registry[chat_id][user_id]['last_message'] = tznow()
+
+    def get_all_chat_users(self, chat):
+        return self._registry.get(chat.id, {}).values()
+
+    def get_active_users(self, chat, minutes=60):
+        now = tznow()
+        for user in self.get_all_chat_users(chat):
+            since_last_message = now - user['last_message']
+            if (since_last_message.total_seconds()) / 60 <= minutes:
+                yield user
+
+
+CHAT_USER_REGISTRY = ChatUserRegistry()
 
 
 RESPONSES_EN = '''\
@@ -97,6 +135,8 @@ SLABAK_TEXT = '''
 я пас\
 '''.split('\n')
 SLABAK_STICKER_ID = 'CAADAgADGQADILtyA8fJUtBfJbTsAg'
+CHANNEL_CMD = '@channel'
+HERE_CMD = '@here'
 
 
 def tznow(tz=None):
@@ -152,11 +192,66 @@ class SlabakFilter(BaseFilter):
         return txt in SLABAK_TEXT
 
 
+class ChannelFilter(BaseFilter):
+    def filter(self, message):
+        txt = message.text.lower().split()
+        return CHANNEL_CMD in txt
+
+
+class HereFilter(BaseFilter):
+    def filter(self, message):
+        txt = message.text.lower().split()
+        return HERE_CMD in txt
+
+
 def slabak_message(bot, update):
     bot.send_sticker(
         chat_id=update.message.chat_id,
         reply_to_message_id=update.message.message_id,
         sticker=SLABAK_STICKER_ID
+    )
+
+
+def all_message(bot, update):
+    msg = update.message
+    CHAT_USER_REGISTRY.add_user(msg.from_user, msg.chat)
+
+
+def _mention_users(text, users):
+    men_text = text
+    for user in users:
+        men_text = '[{}](tg://user?id={}) {}'.format(
+            user['first_name'],
+            user['user_id'],
+            men_text
+        )
+    return men_text
+
+
+def here_message(bot, update):
+    text = update.message.text.replace(HERE_CMD, '')
+    chat_users = CHAT_USER_REGISTRY.get_active_users(update.message.chat, 1)
+    text = _mention_users(text, chat_users)
+    logging.info('here text: {}'.format(text))
+
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        text=text,
+        parse_mode=telegram.ParseMode.MARKDOWN
+    )
+
+
+def channel_message(bot, update):
+    text = update.message.text.replace(CHANNEL_CMD, '')
+    chat_users = CHAT_USER_REGISTRY.get_all_chat_users(update.message.chat)
+    logging.debug(chat_users)
+    text = _mention_users(text, chat_users)
+    logging.info('channel text: {}'.format(text))
+
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        text=text,
+        parse_mode=telegram.ParseMode.MARKDOWN
     )
 
 
@@ -227,6 +322,15 @@ def main():
             ))
     dispatcher.add_handler(
         MessageHandler(Filters.text & SlabakFilter(), slabak_message)
+    )
+    dispatcher.add_handler(
+        MessageHandler(Filters.text & ChannelFilter(), channel_message)
+    )
+    dispatcher.add_handler(
+        MessageHandler(Filters.text & HereFilter(), here_message)
+    )
+    dispatcher.add_handler(
+        MessageHandler(Filters.all, all_message)
     )
 
     if settings.SVOBODA_CHAT_ID:

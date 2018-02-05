@@ -1,4 +1,4 @@
-python-telegram-bot
+python-telegram-bot==8.1.0
 simple-settings
 pytz
 
