@@ -41,10 +41,17 @@ class ChatUserRegistry:
                 'first_name': user.first_name,
                 'last_name': user.last_name
             }
-        self._registry[user_id]['last_message'] = tznow()
+        self._registry[chat_id][user_id]['last_message'] = tznow()
 
     def get_all_chat_users(self, chat):
         return self._registry.get(chat.id, {}).values()
+
+    def get_active_users(self, chat, minutes=60):
+        now = tznow()
+        for user in self.get_all_chat_users(chat):
+            since_last_message = now - user['last_message']
+            if (since_last_message.total_seconds()) / 60 <= minutes:
+                yield user
 
 
 CHAT_USER_REGISTRY = ChatUserRegistry()
@@ -129,6 +136,7 @@ SLABAK_TEXT = '''
 '''.split('\n')
 SLABAK_STICKER_ID = 'CAADAgADGQADILtyA8fJUtBfJbTsAg'
 CHANNEL_CMD = '@channel'
+HERE_CMD = '@here'
 
 
 def tznow(tz=None):
@@ -190,6 +198,12 @@ class ChannelFilter(BaseFilter):
         return CHANNEL_CMD in txt
 
 
+class HereFilter(BaseFilter):
+    def filter(self, message):
+        txt = message.text.strip().lower()
+        return HERE_CMD in txt
+
+
 def slabak_message(bot, update):
     bot.send_sticker(
         chat_id=update.message.chat_id,
@@ -203,14 +217,35 @@ def all_message(bot, update):
     CHAT_USER_REGISTRY.add_user(msg.from_user, msg.chat)
 
 
-def channel_message(bot, update):
-    text = update.message.text.replace(CHANNEL_CMD, '')
-    for user in CHAT_USER_REGISTRY.get_all_chat_users(update.message.chat):
-        text = '[{}](tg://user?id={}) {}'.format(
+def _mention_users(text, users):
+    men_text = text
+    for user in users:
+        men_text = '[{}](tg://user?id={}) {}'.format(
             user['first_name'],
             user['user_id'],
-            text
+            men_text
         )
+    return men_text
+
+
+def here_message(bot, update):
+    text = update.message.text.replace(HERE_CMD, '')
+    chat_users = CHAT_USER_REGISTRY.get_active_users(update.message.chat)
+    text = _mention_users(text, chat_users)
+    logging.info('here text: {}'.format(text))
+
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        text=text,
+        parse_mode=telegram.ParseMode.MARKDOWN
+    )
+
+
+def channel_message(bot, update):
+    text = update.message.text.replace(CHANNEL_CMD, '')
+    chat_users = CHAT_USER_REGISTRY.get_all_chat_users(update.message.chat)
+    logging.debug(chat_users)
+    text = _mention_users(text, chat_users)
     logging.info('channel text: {}'.format(text))
 
     bot.send_message(
@@ -290,6 +325,9 @@ def main():
     )
     dispatcher.add_handler(
         MessageHandler(Filters.text & ChannelFilter(), channel_message)
+    )
+    dispatcher.add_handler(
+        MessageHandler(Filters.text & HereFilter(), here_message)
     )
     dispatcher.add_handler(
         MessageHandler(Filters.all, all_message)
