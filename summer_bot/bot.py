@@ -29,12 +29,17 @@ class ChatUserRegistry:
             return
         chat_id = chat.id
         if chat_id not in self._registry:
-            logging.info('Create new user chat registry {} {}'.format(chat_id, chat.title))
+            logging.info(
+                'Create new user chat registry {} {}'.format(
+                    chat_id, chat.title)
+            )
             self._registry[chat_id] = {}
 
         user_id = user.id
         if user_id not in self._registry[chat_id]:
-            logging.info('Add new user to chat registry {} {}'.format(chat, user))
+            logging.info(
+                'Add new user to chat registry {} {}'.format(chat, user)
+            )
             self._registry[chat_id][user_id] = {
                 'user_id': user_id,
                 'username': user.username,
@@ -149,13 +154,26 @@ def tznow(tz=None):
 
 
 def get_days_left_in_summer(tz=None):
-    tznow_date = tznow().date()
+    tznow_date = tznow(tz=tz).date()
     first_day = datetime.date(tznow_date.year, 6, 1)
     last_day = datetime.date(tznow_date.year, 9, 1)
-    if first_day <= tznow_date <= last_day:
+    if first_day <= tznow_date < last_day:
         return (last_day - tznow_date).days
     else:
         return 0
+
+
+def get_days_till_summer(tz=None):
+    tznow_date = tznow(tz=tz).date()
+    first_day = datetime.date(tznow_date.year, 6, 1)
+    last_day = datetime.date(tznow_date.year, 9, 1)
+    if tznow_date < first_day:
+        return (first_day - tznow_date).days
+    elif first_day <= tznow_date < last_day:
+        return 0
+    else:
+        first_day_next = datetime.date(tznow_date.year + 1, 6, 1)
+        return (first_day_next - tznow_date).days
 
 
 def start(bot, update):
@@ -165,11 +183,14 @@ def start(bot, update):
             """\
             Yo yo yo!!! I am summer bot and I can:
             /summerdays - I will write to the chat how many days left
+            /tillsummer - How many days till summer
             /magicball - спроси меня
             /magicballen - ask me
             /magicballmax - спроси Макса
             /magicballes - pregunta a mí
             /magicballru - спроси меня
+            @channel - mention everyone
+            @here - mention who was active in past hour
             """
         )
     )
@@ -255,6 +276,46 @@ def channel_message(bot, update):
     )
 
 
+def _format_days(days_num):
+    days_num_100 = days_num % 100
+    days_num_10 = days_num % 10
+    if (
+        (days_num_100 < 10 or days_num_100 > 20) and
+        1 <= days_num_10 < 5
+    ):
+        if days_num_10 == 1:
+            days_text = '{}день'.format(days_num)
+        else:
+            days_text = '{}дня'.format(days_num)
+    else:
+        days_text = '{}дней'.format(days_num)
+    return days_text
+
+
+def days_till(bot, update):
+    days_till = get_days_till_summer()
+    if days_left == 0:
+        bot.send_message(
+            chat_id=update.message.chat_id,
+            text=(
+                'иди плавай'
+                )
+            )
+        return
+    emoji = '🌱'
+    # '⛄'
+    # '🍂'
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        text=(
+            '#осталосьждать{} {}'.format(
+                _format_days(days_till),
+                emoji
+            )
+            )
+        )
+
+
 def days_left(bot, update):
     days_left = get_days_left_in_summer()
     if days_left == 0:
@@ -265,22 +326,10 @@ def days_left(bot, update):
                 )
             )
         return
-    days_left_100 = days_left % 100
-    days_left_10 = days_left % 10
-    if (
-            (days_left_100 < 10 or days_left_100 > 20) and
-            1 <= days_left_10 < 5
-             ):
-        if days_left_10 == 1:
-            days_text = '{}день'.format(days_left)
-        else:
-            days_text = '{}дня'.format(days_left)
-    else:
-        days_text = '{}дней'.format(days_left)
     bot.send_message(
         chat_id=update.message.chat_id,
         text=(
-            '#ровноцелых{} 🌞'.format(days_text)
+            '#ровноцелых{} 🌞'.format(_format_days(days_left))
             )
         )
 
@@ -303,8 +352,11 @@ def main():
     start_handler = CommandHandler('start', start)
     dispatcher.add_handler(start_handler)
 
-    days_handler = CommandHandler('summerdays', days_left)
-    dispatcher.add_handler(days_handler)
+    summerdays_handler = CommandHandler('summerdays', days_left)
+    dispatcher.add_handler(summerdays_handler)
+
+    tillsummer_handler = CommandHandler('tillsummer', days_till)
+    dispatcher.add_handler(tillsummer_handler)
 
     for postfix, responses in (
             ('en', RESPONSES_EN),
