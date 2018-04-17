@@ -2,10 +2,10 @@ from fabric.api import *
 
 
 env.use_ssh_config = True
-env.hosts = ["snalg1"]
+env.hosts = ["bots"]
 
 
-folder = '/home/snoopt/summer'
+folder = '/var/www/bots/summer'
 
 
 

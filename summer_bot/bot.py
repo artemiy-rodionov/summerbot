@@ -312,8 +312,8 @@ def days_till(bot, update):
                 _format_days(days_till),
                 emoji
             )
-            )
         )
+    )
 
 
 def days_left(bot, update):
@@ -334,11 +334,31 @@ def days_left(bot, update):
         )
 
 
-def callback_1900(bot, job):
+def callback_svoboda(bot, job):
     bot.send_message(
             chat_id=settings.SVOBODA_CHAT_ID,
             text='Го в Свобода'
             )
+    next_run = 24 * 60 * 60
+    logging.info("next run in {} seconds".format(next_run))
+    job.interval = next_run
+
+
+def callback_summer(bot, job):
+    days_left = get_days_left_in_summer()
+    if days_left == 0:
+        days_till = get_days_till_summer()
+        emoji = '🌱'
+        msg = '#осталосьждать{} {}'.format(
+            _format_days(days_till),
+            emoji
+        )
+    else:
+        msg = '#ровноцелых{} 🌞'.format(_format_days(days_left))
+    bot.send_message(
+        chat_id=settings.SVOBODA_CHAT_ID,
+        text=msg
+    )
     next_run = 24 * 60 * 60
     logging.info("next run in {} seconds".format(next_run))
     job.interval = next_run
@@ -385,9 +405,8 @@ def main():
         MessageHandler(Filters.all, all_message)
     )
 
-    if settings.SVOBODA_CHAT_ID:
+    def add_cb(cb_time, cb):
         moscow_now = tznow()
-        cb_time = datetime.time(19, 0)
         if moscow_now.time() > cb_time:
             day = moscow_now.date() + datetime.timedelta(days=1)
         else:
@@ -396,7 +415,11 @@ def main():
         delta = cb_dtime - moscow_now
         logging.info('Cb dtime {} now is {}'.format(cb_dtime, moscow_now))
         logging.info('Set job after {} seconds'.format(delta.total_seconds()))
-        jq.put(Job(callback_1900, delta.total_seconds()))
+        jq.put(Job(cb, delta.total_seconds()))
+
+    if settings.SVOBODA_CHAT_ID:
+        add_cb(datetime.time(19, 0), callback_svoboda)
+        add_cb(datetime.time(12, 0), callback_summer)
 
     updater.start_polling()
 
