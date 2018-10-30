@@ -176,6 +176,12 @@ def get_days_till_summer(tz=None):
         return (first_day_next - tznow_date).days
 
 
+def get_days_till_ny(tz=None):
+    tznow_date = tznow(tz=tz).date()
+    ny_day = datetime.date(tznow_date.year+1, 1, 1)
+    return (ny_day - tznow_date).days
+
+
 def start(bot, update):
     bot.send_message(
         chat_id=update.message.chat_id,
@@ -334,6 +340,42 @@ def days_left(bot, update):
         )
 
 
+def days_message():
+    days_left = get_days_left_in_summer()
+    if days_left == 0:
+        days_till_summer = get_days_till_summer()
+        new_year_left = get_days_till_ny()
+        if new_year_left < days_till_summer:
+            emoji = random.choice((
+                '🎅',
+                '🦌',
+                '🎄',
+                "☃️'",
+            ))
+            if new_year_left == 1:
+                emoji = '🎅'
+            msg = '#{}доновогогода {}'.format(
+                _format_days(new_year_left),
+                emoji
+            )
+        else:
+            emoji = '🌱'
+            msg = '#осталосьждать{} {}'.format(
+                _format_days(days_till_summer),
+                emoji
+            )
+    else:
+        msg = '#ровноцелых{} 🌞'.format(_format_days(days_left))
+    return msg
+
+
+def days_handler(bot, update):
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        text=days_message()
+    )
+
+
 def callback_svoboda(bot, job):
     bot.send_message(
             chat_id=settings.SVOBODA_CHAT_ID,
@@ -345,16 +387,7 @@ def callback_svoboda(bot, job):
 
 
 def callback_summer(bot, job):
-    days_left = get_days_left_in_summer()
-    if days_left == 0:
-        days_till = get_days_till_summer()
-        emoji = '🌱'
-        msg = '#осталосьждать{} {}'.format(
-            _format_days(days_till),
-            emoji
-        )
-    else:
-        msg = '#ровноцелых{} 🌞'.format(_format_days(days_left))
+    msg = days_message()
     bot.send_message(
         chat_id=settings.SVOBODA_CHAT_ID,
         text=msg
@@ -377,6 +410,9 @@ def main():
 
     tillsummer_handler = CommandHandler('tillsummer', days_till)
     dispatcher.add_handler(tillsummer_handler)
+
+    days = CommandHandler('days', days_handler)
+    dispatcher.add_handler(days)
 
     for postfix, responses in (
             ('en', RESPONSES_EN),
