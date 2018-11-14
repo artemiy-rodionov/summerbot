@@ -1,3 +1,4 @@
+import re
 import datetime
 import logging
 import random
@@ -229,7 +230,7 @@ class SlabakFilter(BaseFilter):
 class ThreeHundredFilter(BaseFilter):
     def filter(self, message):
         txt = message.text.strip().lower()
-        words = txt.split()
+        words = re.split('[\s,?!]', txt)
         return any(map(lambda opt: opt in words, THREE_HUNDRED_TEXT))
 
 
