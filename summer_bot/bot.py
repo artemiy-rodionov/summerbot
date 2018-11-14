@@ -139,7 +139,14 @@ SLABAK_TEXT = '''
 пас
 я пас\
 '''.split('\n')
+
+THREE_HUNDRED_TEXT = (
+    '300',
+    'триста'
+)
+
 SLABAK_STICKER_ID = 'CAADAgADGQADILtyA8fJUtBfJbTsAg'
+TRAKTORIST_AUDIO_ID = 'AwADAgADOQIAAviVYEuJrf_4XXXKaAI'
 CHANNEL_CMD = '@channel'
 HERE_CMD = '@here'
 
@@ -219,6 +226,13 @@ class SlabakFilter(BaseFilter):
         return txt in SLABAK_TEXT
 
 
+class ThreeHundredFilter(BaseFilter):
+    def filter(self, message):
+        txt = message.text.strip().lower()
+        words = txt.split()
+        return any(map(lambda opt: opt in words, THREE_HUNDRED_TEXT))
+
+
 class ChannelFilter(BaseFilter):
     def filter(self, message):
         txt = message.text.lower().split()
@@ -236,6 +250,15 @@ def slabak_message(bot, update):
         chat_id=update.message.chat_id,
         reply_to_message_id=update.message.message_id,
         sticker=SLABAK_STICKER_ID
+    )
+
+
+def three_hundered_message(bot, update):
+    bot.send_voice(
+        chat_id=update.message.chat_id,
+        reply_to_message_id=update.message.message_id,
+        voice=TRAKTORIST_AUDIO_ID,
+        # caption='300',
     )
 
 
@@ -430,6 +453,11 @@ def main():
             ))
     dispatcher.add_handler(
         MessageHandler(Filters.text & SlabakFilter(), slabak_message)
+    )
+    dispatcher.add_handler(
+        MessageHandler(
+            Filters.text & ThreeHundredFilter(),
+            three_hundered_message)
     )
     dispatcher.add_handler(
         MessageHandler(Filters.text & ChannelFilter(), channel_message)
