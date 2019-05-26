@@ -146,6 +146,22 @@ THREE_HUNDRED_TEXT = (
     'триста'
 )
 
+GO_OPTS = (
+    'консерваторию',
+    'го',
+    'театр',
+    'кино',
+    'бар',
+    'паб',
+    'пень',
+    'лес',
+    'филармонию',
+    'преф',
+    'настолки',
+    'фифу',
+    'контру',
+)
+
 SLABAK_STICKER_ID = 'CAADAgADGQADILtyA8fJUtBfJbTsAg'
 TRAKTORIST_AUDIO_ID = 'AwADAgADOQIAAviVYEuJrf_4XXXKaAI'
 CHANNEL_CMD = '@channel'
@@ -400,10 +416,15 @@ def days_handler(bot, update):
     )
 
 
+def random_go():
+    opt = random.choice(GO_OPTS)
+    return 'Го в {opt}'.format(opt=opt)
+
+
 def callback_svoboda(bot, job):
     bot.send_message(
             chat_id=settings.SVOBODA_CHAT_ID,
-            text='Го в Свобода'
+            text=random_go()
             )
     next_run = 24 * 60 * 60
     logging.info("next run in {} seconds".format(next_run))
