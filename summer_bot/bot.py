@@ -405,7 +405,10 @@ def days_message():
                 emoji
             )
     else:
-        msg = '#ровноцелых{} 🌞'.format(_format_days(days_left))
+        if days_left % 10 == 1:
+            msg = '#ровноцелый{} 🌞'.format(_format_days(days_left))
+        else:
+            msg = '#ровноцелых{} 🌞'.format(_format_days(days_left))
     return msg
 
 
