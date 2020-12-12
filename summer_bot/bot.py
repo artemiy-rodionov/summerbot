@@ -12,11 +12,12 @@ from telegram.ext import (
 )
 
 import pytz
+from summer_bot import constants
 
 logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 DEFAULT_TZ = pytz.timezone(settings.DEFAULT_TIMEZONE)
 
@@ -62,106 +63,6 @@ class ChatUserRegistry:
 
 CHAT_USER_REGISTRY = ChatUserRegistry()
 
-
-RESPONSES_EN = '''\
-It is certain
-It is decidedly so
-Without a doubt
-Yes definitely
-You may rely on it
-As I see it, yes
-Most likely
-Outlook good
-Yes
-Signs point to yes
-Reply hazy try again
-Ask again later
-Better not tell you now
-Cannot predict now
-Concentrate and ask again
-Don't count on it
-My reply is no
-My sources say no
-Outlook not so good
-Very doubtful\
-'''.split('\n')
-
-RESPONSES_ES = '''\
-En mi opinión, sí
-Es cierto
-Es decididamente así
-Probablemente
-Buen pronóstico
-Todo apunta a que sí
-Sin duda
-Sí
-Sí - definitivamente
-Debes confiar en ello
-Respuesta vaga, vuelve a intentarlo
-Pregunta en otro momento
-Será mejor que no te lo diga ahora
-No puedo predecirlo ahora
-Concéntrate y vuelve a preguntar
-No cuentes con ello
-Mi respuesta es no
-Mis fuentes me dicen que no
-Las perspectivas no son buenas
-Muy dudoso\
-'''.split('\n')
-RESPONSES_DE = '''\
-'''.split('\n')
-
-RESPONSES_RU = '''\
-Бесспорно
-Предрешено
-Никаких сомнений
-Определённо да
-Можешь быть уверен в этом
-Мне кажется — «да»
-Вероятнее всего
-Хорошие перспективы
-Знаки говорят — «да»
-Да
-Пока не ясно, попробуй снова
-Спроси позже
-Лучше не рассказывать
-Сейчас нельзя предсказать
-Сконцентрируйся и спроси опять
-Даже не думай
-Мой ответ — «нет»
-По моим данным — «нет»
-Перспективы не очень хорошие
-Весьма сомнительно\
-'''.split('\n')
-
-RESPONSES_MAX = 'иди на хуй'.split('\n')
-
-SLABAK_TEXT = '''
-пас
-я пас\
-'''.split('\n')
-
-THREE_HUNDRED_TEXT = (
-    '300',
-    'триста'
-)
-
-GO_OPTS = (
-    'консерваторию',
-    'го',
-    'театр',
-    'кино',
-    'бар',
-    'паб',
-    'пень',
-    'лес',
-    'филармонию',
-    'преф',
-    'настолки',
-    'фифу',
-    'контру',
-)
-
 SLABAK_STICKER_ID = 'CAADAgADGQADILtyA8fJUtBfJbTsAg'
 TRAKTORIST_AUDIO_ID = 'AwADAgADOQIAAviVYEuJrf_4XXXKaAI'
 CHANNEL_CMD = '@channel'
@@ -202,7 +103,7 @@ def get_days_till_summer(tz=None):
 
 def get_days_till_ny(tz=None):
     tznow_date = tznow(tz=tz).date()
-    ny_day = datetime.date(tznow_date.year+1, 1, 1)
+    ny_day = datetime.date(tznow_date.year + 1, 1, 1)
     return (ny_day - tznow_date).days
 
 
@@ -230,24 +131,25 @@ def magic_8_ball(responses):
     def f(bot, update):
         answer = random.choice(responses)
         bot.send_message(
-                chat_id=update.message.chat_id,
-                reply_to_message_id=update.message.message_id,
-                text='🎱 {}'.format(answer)
-                )
+            chat_id=update.message.chat_id,
+            reply_to_message_id=update.message.message_id,
+            text='🎱 {}'.format(answer)
+        )
+
     return f
 
 
 class SlabakFilter(BaseFilter):
     def filter(self, message):
         txt = message.text.strip().lower()
-        return txt in SLABAK_TEXT
+        return txt in constants.SLABAK_TEXT
 
 
 class ThreeHundredFilter(BaseFilter):
     def filter(self, message):
         txt = message.text.strip().lower()
         words = re.split('[\s,?!]', txt)
-        return any(map(lambda opt: opt in words, THREE_HUNDRED_TEXT))
+        return any(map(lambda opt: opt in words, constants.THREE_HUNDRED_TEXT))
 
 
 class ChannelFilter(BaseFilter):
@@ -326,8 +228,8 @@ def _format_days(days_num):
     days_num_100 = days_num % 100
     days_num_10 = days_num % 10
     if (
-        (days_num_100 < 10 or days_num_100 > 20) and
-        1 <= days_num_10 < 5
+            (days_num_100 < 10 or days_num_100 > 20) and
+            1 <= days_num_10 < 5
     ):
         if days_num_10 == 1:
             days_text = '{}день'.format(days_num)
@@ -345,8 +247,8 @@ def days_till(bot, update):
             chat_id=update.message.chat_id,
             text=(
                 'иди плавай'
-                )
             )
+        )
         return
     emoji = '🌱'
     # '⛄'
@@ -369,15 +271,15 @@ def days_left(bot, update):
             chat_id=update.message.chat_id,
             text=(
                 'лето кончилось :('
-                )
             )
+        )
         return
     bot.send_message(
         chat_id=update.message.chat_id,
         text=(
             '#ровноцелых{} 🌞'.format(_format_days(days_left))
-            )
         )
+    )
 
 
 def days_message():
@@ -420,15 +322,29 @@ def days_handler(bot, update):
 
 
 def random_go():
-    opt = random.choice(GO_OPTS)
+    opt = random.choice(constants.GO_OPTS)
     return 'Го в {opt}'.format(opt=opt)
+
+
+def random_good_word():
+    return random.choice(constants.GOOD_WORDS)
+
+
+def callback_good_words(bot, job):
+    bot.send_message(
+        chat_id=settings.SVOBODA_CHAT_ID,
+        text=random_good_word()
+    )
+    next_run = 24 * 60 * 60
+    logging.info("next run in {} seconds".format(next_run))
+    job.interval = next_run
 
 
 def callback_svoboda(bot, job):
     bot.send_message(
-            chat_id=settings.SVOBODA_CHAT_ID,
-            text=random_go()
-            )
+        chat_id=settings.SVOBODA_CHAT_ID,
+        text=random_go()
+    )
     next_run = 24 * 60 * 60
     logging.info("next run in {} seconds".format(next_run))
     job.interval = next_run
@@ -463,19 +379,19 @@ def main():
     dispatcher.add_handler(days)
 
     for postfix, responses in (
-            ('en', RESPONSES_EN),
-            ('es', RESPONSES_ES),
-            ('ru', RESPONSES_RU),
-            ('max', RESPONSES_MAX)
-            ):
+            ('en', constants.RESPONSES_EN),
+            ('es', constants.RESPONSES_ES),
+            ('ru', constants.RESPONSES_RU),
+            ('max', constants.RESPONSES_MAX)
+    ):
         dispatcher.add_handler(CommandHandler(
-                'magicball{}'.format(postfix),
-                magic_8_ball(responses)
-                ))
+            'magicball{}'.format(postfix),
+            magic_8_ball(responses)
+        ))
     dispatcher.add_handler(CommandHandler(
-            'magicball',
-            magic_8_ball(RESPONSES_RU)
-            ))
+        'magicball',
+        magic_8_ball(constants.RESPONSES_RU)
+    ))
     dispatcher.add_handler(
         MessageHandler(Filters.text & SlabakFilter(), slabak_message)
     )
@@ -509,6 +425,7 @@ def main():
     if settings.SVOBODA_CHAT_ID:
         add_cb(datetime.time(19, 0), callback_svoboda)
         add_cb(datetime.time(12, 0), callback_summer)
+        add_cb(datetime.time(15, 0), callback_good_words)
 
     updater.start_polling()
 
