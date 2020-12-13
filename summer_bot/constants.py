@@ -83,10 +83,6 @@ RESPONSES_ES = [
 ]
 
 
-RESPONSES_DE = '''\
-'''.split('\n')
-
-
 RESPONSES_RU = [
     'Бесспорно',
     'Предрешено',
